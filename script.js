@@ -456,7 +456,136 @@ function soundPlaybackFailed(error) {
   showToast('No se pudo reproducir el sonido. Comprueba los archivos de audio.');
 }
 
-$('start-button').addEventListener('click', () => showScreen('student-screen'));
+let introTimer = null;
+let introFinished = false;
+let introInteracted = false;
+let introAudioContext = null;
+let introMusic = null;
+let introMusicAttempt = 0;
+let introMusicPending = false;
+const introMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+function pauseIntroMusic(reset = false) {
+  introMusicAttempt += 1;
+  introMusicPending = false;
+  if (introMusic) {
+    introMusic.pause();
+    if (reset) introMusic.currentTime = 0;
+  }
+}
+
+function playIntroMusic() {
+  if (!state.sound || !$('welcome-screen').classList.contains('active') || introMusicPending) return;
+  try {
+    if (!introMusic) {
+      introMusic = new Audio('audio/entradilla.mp3');
+      introMusic.volume = 0.2;
+      introMusic.loop = true;
+    }
+    if (!introMusic.paused) return;
+    const attempt = ++introMusicAttempt;
+    introMusicPending = true;
+    introMusic.play().then(() => {
+      if (attempt !== introMusicAttempt) return;
+      introMusicPending = false;
+      $('intro-music-hint').hidden = true;
+    }).catch((error) => {
+      if (attempt !== introMusicAttempt) return;
+      introMusicPending = false;
+      console.warn('No se pudo reproducir la música de la portada:', error);
+      $('intro-music-hint').hidden = false;
+      showToast(error.name === 'NotAllowedError'
+        ? 'El navegador ha bloqueado la música. Pulsa en la pantalla para intentarlo de nuevo.'
+        : 'No se pudo reproducir la música de la portada. Comprueba el archivo de audio.');
+    });
+  } catch (error) {
+    introMusicPending = false;
+    console.warn('No se pudo reproducir la música de la portada:', error);
+    $('intro-music-hint').hidden = false;
+    showToast('No se pudo reproducir la música de la portada. Comprueba el archivo de audio.');
+  }
+}
+
+function stopIntroCue() {
+  const context = introAudioContext;
+  introAudioContext = null;
+  if (context && context.state !== 'closed') {
+    context.close().catch((error) => console.warn('No se pudo cerrar el sonido de la introducción:', error));
+  }
+}
+
+function playIntroCue(fromGesture) {
+  if (!state.sound) return;
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContext) {
+    console.warn('El navegador no admite el sonido de la introducción.');
+    return;
+  }
+  try {
+    stopIntroCue();
+    const context = new AudioContext();
+    introAudioContext = context;
+    if (context.state === 'suspended' && !fromGesture) {
+      stopIntroCue();
+      return;
+    }
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    const now = context.currentTime;
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(440, now);
+    oscillator.frequency.exponentialRampToValueAtTime(660, now + 0.3);
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.exponentialRampToValueAtTime(0.035, now + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.onended = () => {
+      if (introAudioContext === context) stopIntroCue();
+    };
+    oscillator.start(now);
+    oscillator.stop(now + 0.5);
+    if (context.state === 'suspended') {
+      context.resume().catch((error) => {
+        console.warn('No se pudo reproducir el sonido de la introducción:', error);
+        if (introAudioContext === context) stopIntroCue();
+      });
+    }
+  } catch (error) {
+    console.warn('No se pudo reproducir el sonido de la introducción:', error);
+    stopIntroCue();
+  }
+}
+
+function finishIntro(staticVersion = false, fromGesture = false) {
+  if (introFinished) return;
+  introFinished = true;
+  window.clearTimeout(introTimer);
+  const returnFocus = fromGesture || document.activeElement === $('skip-intro');
+  $('intro-stage').classList.toggle('intro-static', staticVersion);
+  $('intro-crawl').hidden = !staticVersion;
+  $('skip-intro').hidden = true;
+  $('intro-landing').hidden = false;
+  if (returnFocus) $('start-button').focus();
+  if (!staticVersion && (fromGesture || introInteracted)) playIntroCue(fromGesture);
+}
+
+document.addEventListener('pointerdown', () => { introInteracted = true; }, { once: true });
+document.addEventListener('keydown', () => { introInteracted = true; }, { once: true });
+document.addEventListener('click', playIntroMusic);
+playIntroMusic();
+$('skip-intro').addEventListener('click', () => finishIntro(false, true));
+if (introMotion.matches) finishIntro(true);
+else introTimer = window.setTimeout(() => finishIntro(), 15000);
+introMotion.addEventListener('change', (event) => {
+  if (event.matches && !introFinished) finishIntro(true);
+});
+
+$('start-button').addEventListener('click', () => {
+  pauseIntroMusic(true);
+  playIntroCue(true);
+  showScreen('student-screen');
+});
 $('student-class').addEventListener('change', () => {
   const other = $('student-class').value === 'other';
   $('other-class').classList.toggle('hidden', !other);
@@ -468,8 +597,16 @@ $('next-button').addEventListener('click', advanceQuestion);
 $('sound-toggle').addEventListener('click', () => {
   state.sound = !state.sound;
   updateSoundToggle();
-  if (state.sound) playSound(true);
-  else stopSound();
+  if (state.sound) {
+    if ($('welcome-screen').classList.contains('active')) playIntroMusic();
+    else playSound(true);
+  }
+  else {
+    stopSound();
+    stopIntroCue();
+    pauseIntroMusic();
+    $('intro-music-hint').hidden = true;
+  }
 });
 $('capture-button').addEventListener('click', () => {
   document.body.classList.add('capture-mode');

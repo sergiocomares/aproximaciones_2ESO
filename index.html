@@ -24,21 +24,27 @@
     </header>
 
     <main>
-      <section class="screen active" id="welcome-screen" aria-labelledby="welcome-title">
-        <div class="intro-stage">
-          <div class="intro-decoration" aria-hidden="true">
-            <span class="intro-ring intro-ring-one"></span><span class="intro-ring intro-ring-two"></span>
-            <span class="intro-symbol intro-symbol-one">≈</span><span class="intro-symbol intro-symbol-two">12,005</span>
-            <span class="intro-symbol intro-symbol-three">%</span><span class="intro-symbol intro-symbol-four">45,79</span>
-            <span class="intro-symbol intro-symbol-five">∑</span><span class="intro-symbol intro-symbol-six">✦</span>
-          </div>
-          <div class="intro-content">
-            <p class="intro-label"><span></span> MATH ADVENTURE · 2.º ESO <span></span></p>
-            <div class="intro-manifesto">
-              <p class="intro-line intro-first">NO LO PEDISTE.</p>
-              <p class="intro-line intro-second">NO LO ESPERABAS.</p>
-              <p class="intro-line intro-third">PERO LO NECESITABAS.</p>
+      <section class="screen active" id="welcome-screen" aria-label="Introducción a Rounding and Truncating Challenge">
+        <div class="intro-stage" id="intro-stage">
+          <div class="space-stars space-stars-far" aria-hidden="true"></div>
+          <div class="space-stars space-stars-near" aria-hidden="true"></div>
+          <div class="space-horizon" aria-hidden="true"></div>
+          <p class="intro-music-hint" id="intro-music-hint" hidden>🔊 Pulsa en la pantalla para escuchar la música.</p>
+          <div class="crawl-scene" id="intro-crawl">
+            <div class="crawl-text">
+              <p>NO LO PEDISTE.</p>
+              <p>NO LO ESPERABAS.</p>
+              <p>PERO LO NECESITABAS.</p>
+              <p>En una galaxia no tan lejana...</p>
+              <p>Un estudiante se enfrenta a un desafío matemático legendario.</p>
+              <p>20 preguntas.<br>Dos procedimientos.<br>Una misión.</p>
+              <p>DOMINAR EL REDONDEO Y EL TRUNCAMIENTO.</p>
+              <p>¿SERÁS CAPAZ DE SUPERAR EL RETO?</p>
             </div>
+          </div>
+          <button class="intro-skip" id="skip-intro" type="button">SKIP INTRO <span aria-hidden="true">▶</span></button>
+          <div class="intro-content" id="intro-landing" hidden>
+            <p class="intro-label"><span></span> MATH ADVENTURE · 2.º ESO <span></span></p>
             <div class="intro-game-title">
               <p class="intro-title-label">EL DESAFÍO DEFINITIVO DE APROXIMACIÓN</p>
               <h1 id="welcome-title">ROUNDING <span>&amp;</span> TRUNCATING <strong>CHALLENGE</strong></h1>
@@ -46,7 +52,6 @@
             </div>
             <p class="intro-ready">¿ESTÁS PREPARADO?</p>
             <button class="primary-button intro-start" id="start-button" type="button"><span aria-hidden="true">▶</span> PRESS START TO PLAY</button>
-            <p class="intro-humor">Tus decimales no saben lo que les espera.</p>
           </div>
         </div>
       </section>
