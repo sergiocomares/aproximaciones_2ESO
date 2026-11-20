@@ -9,6 +9,7 @@ const LEVELS = [
 ];
 const QUESTIONS_PER_LEVEL = 4;
 const TOTAL_QUESTIONS = LEVELS.length * QUESTIONS_PER_LEVEL;
+const NUMBER_SCALE = 10000n;
 const MATH_TRANSLATIONS = {
   'redondeo': 'Rounding',
   'truncamiento': 'Truncation',
@@ -19,27 +20,28 @@ const MATH_TRANSLATIONS = {
   'unidades': 'Units',
   'décimas': 'Tenths',
   'centésimas': 'Hundredths',
-  'milésimas': 'Thousandths'
+  'milésimas': 'Thousandths',
+  'diezmilésimas': 'Ten-thousandths'
 };
 const MATH_TERMS = new RegExp(
   `(^|[^a-záéíóúüñ])(${Object.keys(MATH_TRANSLATIONS).sort((a, b) => b.length - a.length).join('|')})(?![a-záéíóúüñ])`,
   'gi'
 );
 const PLACES = [
-  { name: 'DECENAS DE MILLAR', unit: 10000000n, integer: true, digitName: 'decenas de millar', observe: 'unidades de millar' },
-  { name: 'UNIDADES DE MILLAR', unit: 1000000n, integer: true, digitName: 'unidades de millar', observe: 'centenas' },
-  { name: 'CENTENAS', unit: 100000n, integer: true, digitName: 'centenas', observe: 'decenas' },
-  { name: 'DECENAS', unit: 10000n, integer: true, digitName: 'decenas', observe: 'unidades' },
-  { name: 'UNIDADES', unit: 1000n, integer: true, digitName: 'unidades', observe: 'décimas' },
-  { name: 'DÉCIMAS', unit: 100n, integer: false, digitName: 'décimas', observe: 'centésimas' },
-  { name: 'CENTÉSIMAS', unit: 10n, integer: false, digitName: 'centésimas', observe: 'milésimas' },
-  { name: 'MILÉSIMAS', unit: 1n, integer: false, digitName: 'milésimas', observe: 'ninguna cifra posterior' }
+  { name: 'DECENAS DE MILLAR', unit: 100000000n, integer: true, digitName: 'decenas de millar', observe: 'unidades de millar' },
+  { name: 'UNIDADES DE MILLAR', unit: 10000000n, integer: true, digitName: 'unidades de millar', observe: 'centenas' },
+  { name: 'CENTENAS', unit: 1000000n, integer: true, digitName: 'centenas', observe: 'decenas' },
+  { name: 'DECENAS', unit: 100000n, integer: true, digitName: 'decenas', observe: 'unidades' },
+  { name: 'UNIDADES', unit: 10000n, integer: true, digitName: 'unidades', observe: 'décimas' },
+  { name: 'DÉCIMAS', unit: 1000n, integer: false, digitName: 'décimas', observe: 'centésimas' },
+  { name: 'CENTÉSIMAS', unit: 100n, integer: false, digitName: 'centésimas', observe: 'milésimas' },
+  { name: 'MILÉSIMAS', unit: 10n, integer: false, digitName: 'milésimas', observe: 'diezmilésimas' }
 ];
 const state = {
   questions: [], questionIndex: 0, correct: 0, wrong: 0, score: 0,
   streak: 0, bestStreak: 0, levelCorrect: 0, startedAt: 0, timerId: null,
   errors: [], badges: new Set(), studentName: '', studentClass: '',
-  answered: false, sound: false, audioContext: null
+  answered: false, sound: true, currentAudio: null
 };
 const $ = (id) => document.getElementById(id);
 
@@ -54,7 +56,11 @@ function bilingualHTML(text) {
 
 function showScreen(screenId) {
   document.querySelectorAll('.screen').forEach((screen) => screen.classList.toggle('active', screen.id === screenId));
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  scrollToTop();
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }
 
 function randomInt(min, max) {
@@ -89,21 +95,20 @@ function buildQuestions() {
 
 function makeQuestion(level, place, procedure, pair) {
   const maxWhole = [999, 9999, 99999, 999999, 999999][level];
-  const minWhole = place.integer && place.unit > 1000n ? Number(place.unit / 1000n) : 0;
+  const minWhole = place.integer && place.unit > NUMBER_SCALE ? Number(place.unit / NUMBER_SCALE) : 0;
   const whole = BigInt(randomInt(minWhole, Math.max(minWhole * 10 - 1, maxWhole)));
   let fraction = 0;
   let decimalPlaces = 0;
   if (!place.integer) {
-    // Keep three displayed digits so zeroes and the requested place remain visible.
-    fraction = pair === 0 ? 105 : pair === 1 ? 120 : randomInt(1, 999);
-    decimalPlaces = 3;
-  } else if (place.unit === 1000n || Math.random() < 0.5) {
-    decimalPlaces = randomInt(1, 3);
-    fraction = randomInt(1, 10 ** decimalPlaces - 1) * 10 ** (3 - decimalPlaces);
+    fraction = pair === 0 ? 1057 : pair === 1 ? 1200 : randomInt(1, 9999);
+    decimalPlaces = 4;
+  } else if (place.unit === NUMBER_SCALE || Math.random() < 0.5) {
+    decimalPlaces = randomInt(1, 4);
+    fraction = randomInt(1, 10 ** decimalPlaces - 1) * 10 ** (4 - decimalPlaces);
   } else {
     decimalPlaces = 0;
   }
-  const number = whole * 1000n + BigInt(fraction);
+  const number = whole * NUMBER_SCALE + BigInt(fraction);
   return { level, number, isDecimal: decimalPlaces > 0, decimalPlaces, place, procedure, answer: approximate(number, place.unit, procedure) };
 }
 
@@ -113,8 +118,8 @@ function approximate(number, unit, procedure) {
 }
 
 function formatNumber(value, decimalPlaces) {
-  const whole = value / 1000n;
-  const fraction = String(value % 1000n).padStart(3, '0');
+  const whole = value / NUMBER_SCALE;
+  const fraction = String(value % NUMBER_SCALE).padStart(4, '0');
   const grouped = String(whole).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   let result = grouped;
   if (decimalPlaces > 0) result += ',' + fraction.slice(0, decimalPlaces);
@@ -127,22 +132,18 @@ function formatQuestionNumber(question) {
 
 function parseAnswer(raw) {
   const normalized = raw.trim().replace(/\s/g, '').replace(/'/g, '');
-  if (!normalized || !/^\d+(?:[,.]\d{1,3})?$/.test(normalized)) return null;
+  if (!normalized || !/^\d+(?:[,.]\d{1,4})?$/.test(normalized)) return null;
   const parts = normalized.replace(',', '.').split('.');
   const whole = BigInt(parts[0]);
-  const fraction = (parts[1] || '').padEnd(3, '0');
-  return whole * 1000n + BigInt(fraction || '0');
+  const fraction = (parts[1] || '').padEnd(4, '0');
+  return whole * NUMBER_SCALE + BigInt(fraction || '0');
 }
 
 function getExplanation(question) {
   const { number, place, procedure, answer } = question;
   const answerShown = formatNumber(answer, place.integer ? 0 : place.name === 'DÉCIMAS' ? 1 : place.name === 'CENTÉSIMAS' ? 2 : 3);
   if (procedure === 'TRUNCAMIENTO') {
-    if (place.unit === 1n) return `El número ya está expresado hasta las milésimas; no hay cifras posteriores que eliminar. Resultado: ${answerShown}.`;
     return `En el truncamiento a ${place.name.toLowerCase()}, conservamos hasta las ${place.digitName} y eliminamos las cifras posteriores, a partir de las ${place.observe}. Resultado: ${answerShown}.`;
-  }
-  if (place.name === 'MILÉSIMAS') {
-    return `A las milésimas no hay cifras decimales posteriores que observar. Resultado: ${answerShown}.`;
   }
   const digit = Number((number / (place.unit / 10n)) % 10n);
   const inc = digit >= 5;
@@ -211,8 +212,8 @@ function handleAnswer(event) {
   $('check-button').disabled = true;
   $('feedback').hidden = false;
   $('feedback').classList.toggle('incorrect', !correct);
-  $('feedback-icon').textContent = correct ? '✓' : '×';
-  $('feedback-title').textContent = correct ? '¡Excelente! Respuesta correcta.' : '¡Casi! Vamos a aprender de este error.';
+  $('feedback-icon').textContent = correct ? '✓' : '✕';
+  $('feedback-title').textContent = correct ? '¡CORRECTO!' : '¡REVISA TU RESPUESTA!';
   const correctText = formatNumber(question.answer, question.place.integer ? 0 : question.place.name === 'DÉCIMAS' ? 1 : question.place.name === 'CENTÉSIMAS' ? 2 : 3);
   const task = `${question.procedure.toLowerCase()} a ${question.place.name.toLowerCase()}`;
   $('feedback-copy').innerHTML = bilingualHTML(correct
@@ -411,28 +412,48 @@ function showToast(message) {
   showToast.timeoutId = window.setTimeout(() => toast.classList.remove('visible'), 2300);
 }
 
+function updateSoundToggle() {
+  $('sound-toggle').setAttribute('aria-pressed', String(state.sound));
+  $('sound-toggle').setAttribute('aria-label', state.sound ? 'Desactivar sonidos' : 'Activar sonidos');
+  $('sound-toggle').innerHTML = state.sound
+    ? '<span aria-hidden="true">🔊</span><span class="sound-label">Sonido activado</span>'
+    : '<span aria-hidden="true">🔇</span><span class="sound-label">Sonido apagado</span>';
+}
+
+function stopSound() {
+  if (state.currentAudio) {
+    state.currentAudio.pause();
+    state.currentAudio = null;
+  }
+}
+
 function playSound(correct) {
   if (!state.sound) return;
+  stopSound();
+  let audio;
   try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-    if (!state.audioContext) state.audioContext = new AudioContext();
-    const oscillator = state.audioContext.createOscillator();
-    const gain = state.audioContext.createGain();
-    oscillator.type = 'sine';
-    oscillator.frequency.value = correct ? 660 : 220;
-    gain.gain.setValueAtTime(0.08, state.audioContext.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, state.audioContext.currentTime + 0.18);
-    oscillator.connect(gain);
-    gain.connect(state.audioContext.destination);
-    oscillator.start();
-    oscillator.stop(state.audioContext.currentTime + 0.18);
+    audio = new Audio(correct ? 'audio/sonidoAcierto.mp3' : 'audio/sonidoError.mp3');
+    audio.volume = 0.4;
+    state.currentAudio = audio;
+    audio.play().catch((error) => {
+      if (state.currentAudio !== audio) return;
+      soundPlaybackFailed(error);
+    });
   } catch (error) {
-    console.warn('No se pudo reproducir el sonido:', error);
-    state.sound = false;
-    $('sound-toggle').setAttribute('aria-pressed', 'false');
-    $('sound-toggle').innerHTML = '<span aria-hidden="true">🔇</span><span class="sound-label">Sonido apagado</span>';
+    soundPlaybackFailed(error);
   }
+}
+
+function soundPlaybackFailed(error) {
+  console.warn('No se pudo reproducir el sonido:', error);
+  stopSound();
+  if (error.name === 'NotAllowedError') {
+    showToast('El navegador ha bloqueado el sonido. Interactúa con la página para volver a intentarlo.');
+    return;
+  }
+  state.sound = false;
+  updateSoundToggle();
+  showToast('No se pudo reproducir el sonido. Comprueba los archivos de audio.');
 }
 
 $('start-button').addEventListener('click', () => showScreen('student-screen'));
@@ -446,16 +467,13 @@ $('answer-form').addEventListener('submit', handleAnswer);
 $('next-button').addEventListener('click', advanceQuestion);
 $('sound-toggle').addEventListener('click', () => {
   state.sound = !state.sound;
-  $('sound-toggle').setAttribute('aria-pressed', String(state.sound));
-  $('sound-toggle').setAttribute('aria-label', state.sound ? 'Desactivar sonidos' : 'Activar sonidos');
-  $('sound-toggle').innerHTML = state.sound
-    ? '<span aria-hidden="true">🔊</span><span class="sound-label">Sonido activado</span>'
-    : '<span aria-hidden="true">🔇</span><span class="sound-label">Sonido apagado</span>';
+  updateSoundToggle();
   if (state.sound) playSound(true);
+  else stopSound();
 });
 $('capture-button').addEventListener('click', () => {
   document.body.classList.add('capture-mode');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  scrollToTop();
   showToast('Informe limpio listo para capturar. Pulsa Esc para volver.');
 });
 $('print-button').addEventListener('click', () => window.print());

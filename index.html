@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#101329">
+  <meta name="theme-color" content="#080808">
   <meta name="description" content="Un videojuego para practicar redondeo y truncamiento en 2.º de ESO.">
   <title>Rounding &amp; Truncating Challenge</title>
   <link rel="stylesheet" href="styles.css">
@@ -17,8 +17,8 @@
         <span>R&amp;T <span class="brand-light">CHALLENGE</span></span>
       </a>
       <div class="top-actions">
-        <button class="icon-button" id="sound-toggle" type="button" aria-pressed="false" aria-label="Activar sonidos">
-          <span aria-hidden="true">🔇</span><span class="sound-label">Sonido apagado</span>
+        <button class="icon-button" id="sound-toggle" type="button" aria-pressed="true" aria-label="Desactivar sonidos">
+          <span aria-hidden="true">🔊</span><span class="sound-label">Sonido activado</span>
         </button>
       </div>
     </header>
@@ -129,8 +129,8 @@
           <p class="report-date" id="report-date"></p>
           <p class="report-date" id="report-overview">20 preguntas realizadas: 10 de aproximaciones decimales y 10 de unidades y órdenes superiores.</p>
           <div class="report-stats">
-            <div class="report-stat"><strong id="report-correct">0</strong><span>ACIERTOS</span></div>
-            <div class="report-stat"><strong id="report-wrong">0</strong><span>ERRORES</span></div>
+            <div class="report-stat"><strong id="report-correct">0</strong><span><span aria-hidden="true">✓</span> ACIERTOS</span></div>
+            <div class="report-stat"><strong id="report-wrong">0</strong><span><span aria-hidden="true">✕</span> ERRORES</span></div>
             <div class="report-stat"><strong id="report-percent">0%</strong><span>ACIERTOS</span></div>
             <div class="report-stat"><strong id="report-time">00:00</strong><span>TIEMPO</span></div>
             <div class="report-stat"><strong id="report-best-streak">0</strong><span>MEJOR RACHA</span></div>
