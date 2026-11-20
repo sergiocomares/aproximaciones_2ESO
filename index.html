@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101329">
+  <meta name="description" content="Un videojuego para practicar redondeo y truncamiento en 2.º de ESO.">
+  <title>Rounding &amp; Truncating Challenge</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Rounding and Truncating Challenge, inicio">
+        <span class="brand-mark" aria-hidden="true">≈</span>
+        <span>R&amp;T <span class="brand-light">CHALLENGE</span></span>
+      </a>
+      <div class="top-actions">
+        <button class="icon-button" id="sound-toggle" type="button" aria-pressed="false" aria-label="Activar sonidos">
+          <span aria-hidden="true">🔇</span><span class="sound-label">Sonido apagado</span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section class="screen active" id="welcome-screen" aria-labelledby="welcome-title">
+        <div class="intro-stage">
+          <div class="intro-decoration" aria-hidden="true">
+            <span class="intro-ring intro-ring-one"></span><span class="intro-ring intro-ring-two"></span>
+            <span class="intro-symbol intro-symbol-one">≈</span><span class="intro-symbol intro-symbol-two">12,005</span>
+            <span class="intro-symbol intro-symbol-three">%</span><span class="intro-symbol intro-symbol-four">45,79</span>
+            <span class="intro-symbol intro-symbol-five">∑</span><span class="intro-symbol intro-symbol-six">✦</span>
+          </div>
+          <div class="intro-content">
+            <p class="intro-label"><span></span> MATH ADVENTURE · 2.º ESO <span></span></p>
+            <div class="intro-manifesto">
+              <p class="intro-line intro-first">NO LO PEDISTE.</p>
+              <p class="intro-line intro-second">NO LO ESPERABAS.</p>
+              <p class="intro-line intro-third">PERO LO NECESITABAS.</p>
+            </div>
+            <div class="intro-game-title">
+              <p class="intro-title-label">EL DESAFÍO DEFINITIVO DE APROXIMACIÓN</p>
+              <h1 id="welcome-title">ROUNDING <span>&amp;</span> TRUNCATING <strong>CHALLENGE</strong></h1>
+              <p class="intro-subtitle">20 retos para demostrar quién manda realmente sobre los números.</p>
+            </div>
+            <p class="intro-ready">¿ESTÁS PREPARADO?</p>
+            <button class="primary-button intro-start" id="start-button" type="button"><span aria-hidden="true">▶</span> PRESS START TO PLAY</button>
+            <p class="intro-humor">Tus decimales no saben lo que les espera.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="student-screen" aria-labelledby="student-title">
+        <div class="form-card">
+          <div class="step-icon" aria-hidden="true">🧑‍🚀</div>
+          <p class="eyebrow">PREPARA TU MISIÓN</p>
+          <h2 id="student-title">¿Quién está jugando?</h2>
+          <p class="muted">Completa tus datos para personalizar el informe final. No pedimos correo ni guardamos tus datos.</p>
+          <form id="student-form">
+            <label for="student-name">Nombre y apellidos</label>
+            <input id="student-name" name="student-name" type="text" autocomplete="name" maxlength="100" required>
+            <label for="student-class">Curso y grupo</label>
+            <select id="student-class" name="student-class" required>
+              <option value="" selected disabled>Selecciona tu grupo</option>
+              <option>2.º ESO A</option><option>2.º ESO B</option><option>2.º ESO C</option>
+              <option value="other">Otro grupo</option>
+            </select>
+            <input id="other-class" class="hidden" type="text" maxlength="40" aria-label="Escribe tu curso y grupo" placeholder="Escribe tu curso y grupo">
+            <p class="form-error" id="form-error" role="alert"></p>
+            <button class="primary-button full-button" type="submit">¡EMPEZAR AVENTURA! <span aria-hidden="true">→</span></button>
+          </form>
+          <p class="privacy-note"><span aria-hidden="true">🔒</span> Tus datos solo se usan para este informe en este dispositivo.</p>
+        </div>
+      </section>
+
+      <section class="screen" id="game-screen" aria-labelledby="game-title">
+        <div class="game-top">
+          <div class="level-card">
+            <div class="level-icon" id="level-icon" aria-hidden="true">🚀</div>
+            <div><p class="eyebrow" id="level-kicker">NIVEL 1</p><h2 id="level-title">ROOKIE</h2><p class="level-subtitle" id="level-subtitle">Primeros pasos</p></div>
+          </div>
+          <div class="stats-row">
+            <div class="stat-card"><span class="stat-icon" aria-hidden="true">⭐</span><span class="stat-value" id="score-value">0</span><span class="stat-label">PUNTOS</span></div>
+            <div class="stat-card"><span class="stat-icon" aria-hidden="true">🔥</span><span class="stat-value" id="streak-value">0</span><span class="stat-label">RACHA</span></div>
+            <div class="stat-card"><span class="stat-icon" aria-hidden="true">⏱️</span><span class="stat-value" id="timer-value">00:00</span><span class="stat-label">TIEMPO</span></div>
+          </div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>PROGRESO DE LA AVENTURA</span><strong id="progress-count">0 / 20</strong></div>
+          <div class="progress-track" role="progressbar" aria-label="Progreso de la aventura" aria-valuemin="0" aria-valuemax="20" aria-valuenow="0" id="progress-track"><span id="progress-fill"></span></div>
+        </div>
+        <article class="question-card" id="question-card">
+          <div class="question-meta"><span class="question-number" id="question-count">PREGUNTA 1 / 20</span><span class="question-tag" id="question-level-tag">ROOKIE</span></div>
+          <h1 id="game-title">¡Vamos a por ello!</h1>
+          <p class="instruction">Resuelve la aproximación:</p>
+          <div class="number-display" id="number-display" aria-live="polite">38 572</div>
+          <div class="operation-row">
+            <div class="operation-box"><span class="operation-icon" aria-hidden="true">🧭</span><div><span class="detail-label">PROCEDIMIENTO</span><strong id="procedure-display">REDONDEO</strong></div></div>
+            <div class="operation-box"><span class="operation-icon" aria-hidden="true">🎯</span><div><span class="detail-label">APROXIMA A</span><strong id="place-display">CENTENAS</strong></div></div>
+          </div>
+          <form id="answer-form" class="answer-area">
+            <label for="answer-input">Tu respuesta</label>
+            <div class="answer-input-row">
+              <input id="answer-input" type="text" inputmode="decimal" autocomplete="off" placeholder="Escribe aquí..." aria-describedby="answer-hint feedback" required>
+              <button class="primary-button check-button" id="check-button" type="submit">COMPROBAR <span aria-hidden="true">✓</span></button>
+            </div>
+            <p class="input-hint" id="answer-hint">Puedes escribir la coma decimal y separar millares con espacios.</p>
+          </form>
+          <div class="feedback" id="feedback" role="status" aria-live="polite" hidden>
+            <div class="feedback-icon" id="feedback-icon" aria-hidden="true">✓</div>
+            <div class="feedback-text"><strong id="feedback-title"></strong><p id="feedback-copy"></p></div>
+            <button class="primary-button next-button" id="next-button" type="button">SIGUIENTE <span aria-hidden="true">→</span></button>
+          </div>
+        </article>
+        <p class="game-motto" id="game-motto"><span aria-hidden="true">💡</span> ¡Piensa, aproxima y conquista cada nivel!</p>
+      </section>
+
+      <section class="screen" id="results-screen" aria-labelledby="report-title">
+        <div class="report-heading">
+          <div><p class="eyebrow"><span class="eyebrow-dot"></span> MISIÓN COMPLETADA</p><h1 id="report-title">¡AVENTURA<br><span class="title-gradient">SUPERADA!</span></h1></div>
+          <div class="report-trophy" aria-hidden="true">🏆</div>
+        </div>
+        <section class="report-card" id="report-card" aria-label="Informe final">
+          <div class="report-card-head">
+            <div><p class="eyebrow">ROUNDING &amp; TRUNCATING CHALLENGE</p><h2 id="report-student">Informe de evaluación</h2><p class="report-class" id="report-class"></p></div>
+            <div class="grade-block"><span>NOTA</span><strong id="report-grade">10,00</strong><small>/ 10</small></div>
+          </div>
+          <p class="report-date" id="report-date"></p>
+          <p class="report-date" id="report-overview">20 preguntas realizadas: 10 de aproximaciones decimales y 10 de unidades y órdenes superiores.</p>
+          <div class="report-stats">
+            <div class="report-stat"><strong id="report-correct">0</strong><span>ACIERTOS</span></div>
+            <div class="report-stat"><strong id="report-wrong">0</strong><span>ERRORES</span></div>
+            <div class="report-stat"><strong id="report-percent">0%</strong><span>ACIERTOS</span></div>
+            <div class="report-stat"><strong id="report-time">00:00</strong><span>TIEMPO</span></div>
+            <div class="report-stat"><strong id="report-best-streak">0</strong><span>MEJOR RACHA</span></div>
+          </div>
+          <div class="report-summary">
+            <div><span class="detail-label">PUNTUACIÓN DEL JUEGO</span><strong id="report-score">0 puntos</strong></div>
+            <div><span class="detail-label">NIVEL ALCANZADO</span><strong id="report-level">FINAL BOSS</strong></div>
+          </div>
+          <div class="report-feedback"><strong id="report-comment"></strong><p id="report-error-advice"></p></div>
+          <section class="diagnosis-section" aria-labelledby="diagnosis-title">
+            <span class="detail-label">ANÁLISIS DE RESULTADOS</span>
+            <h3 id="diagnosis-title">Diagnóstico de la aventura</h3>
+            <p class="diagnosis-note">Se considera buen dominio con al menos un 70 % de aciertos en cada apartado.</p>
+            <div class="diagnosis-list" id="diagnosis-list"></div>
+          </section>
+          <div class="badge-section"><span class="detail-label">INSIGNIAS CONSEGUIDAS</span><div class="badge-list" id="badge-list"></div></div>
+          <section class="error-section" id="error-section">
+            <div class="error-heading"><div><span class="detail-label">REVISIÓN DE LA PARTIDA</span><h3>Tu informe de errores</h3></div><span class="error-total" id="error-total"></span></div>
+            <div class="error-categories" id="error-categories"></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Pregunta</th><th>Número y operación</th><th>Tu respuesta</th><th>Solución y explicación</th></tr></thead>
+                <tbody id="errors-table"></tbody>
+              </table>
+            </div>
+          </section>
+          <div class="perfect-message" id="perfect-message" hidden>✨ ¡PERFECTO! No has cometido ningún error durante la partida. ✨</div>
+          <footer class="report-author">Creado por Sergio Jodral Estepa, profesor de Matemáticas, utilizando tecnología de Inteligencia Artificial.</footer>
+        </section>
+        <div class="report-actions no-print">
+          <button class="primary-button" id="capture-button" type="button">📸 PREPARAR CAPTURA PARA CLASSROOM</button>
+          <button class="secondary-button" id="print-button" type="button">IMPRIMIR / GUARDAR COMO PDF</button>
+          <button class="text-button" id="restart-button" type="button">Volver a jugar</button>
+        </div>
+        <p class="classroom-note no-print">La captura o el PDF no se envían automáticamente. Adjunta el informe a la actividad de Google Classroom.</p>
+      </section>
+    </main>
+
+    <footer class="site-footer">Creado por Sergio Jodral Estepa, profesor de Matemáticas, utilizando tecnología de Inteligencia Artificial.</footer>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
